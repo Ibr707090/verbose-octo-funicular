@@ -1,10 +1,9 @@
 name: Keep Codespaces Running
 
 on:
-  workflow_dispatch:  # Allows manual trigger
   schedule:
-    - cron: '* * * * *'
-    # Allows manual triggering
+    - cron: '* * * * *'  # Runs every minute
+  workflow_dispatch:  # Allows manual triggering
 
 jobs:
   maintain_codespaces:
@@ -15,6 +14,7 @@ jobs:
         run: |
           sudo apt-get update
           sudo apt-get install -y gh jq
+
       - name: Authenticate GitHub CLI with Personal Classic Token
         env:
           PERSONAL_CLASSIC_TOKEN: ${{ secrets.PERSONAL_CLASSIC_TOKEN }}  # Reference your secret
@@ -24,11 +24,14 @@ jobs:
         run: |
           # Get the list of all Codespaces and their states
           CODESPACES=$(gh codespace list --json name,state | jq -c '.[]')
+
           # Iterate through each Codespace
           echo "$CODESPACES" | while IFS= read -r codespace; do
             NAME=$(echo "$codespace" | jq -r '.name')
             STATUS=$(echo "$codespace" | jq -r '.state')
+
             echo "Codespace: $NAME, Status: $STATUS"
+
             if [ "$STATUS" == "Shutdown" ]; then
               echo "Codespace $NAME is offline. Starting it..."
               gh codespace ssh -c "$NAME" --exit-on-disconnect &
@@ -36,5 +39,7 @@ jobs:
               echo "Codespace $NAME is already running."
             fi
           done
+
           # Wait for all background processes to complete
           wait
+          

@@ -2,8 +2,7 @@ name: Keep Codespaces Running
 
 on:
   schedule:
-    - cron: '* * * * *'  # Runs every 5 minute
-  workflow_dispatch:  # Allows manual triggering
+    - cron: '* * * * *'  # Runs every minute
 
 jobs:
   maintain_codespaces:
@@ -17,15 +16,12 @@ jobs:
 
       - name: Authenticate GitHub CLI with Personal Classic Token
         env:
-          PERSONAL_CLASSIC_TOKEN: ${{ secrets.PERSONAL_CLASSIC_TOKEN }}  # Reference your secret
+          PERSONAL_CLASSIC_TOKEN: ${{ secrets.PERSONAL_CLASSIC_TOKEN }}
         run: echo "$PERSONAL_CLASSIC_TOKEN" | gh auth login --with-token
 
       - name: Check and Restart All Codespaces
         run: |
-          # Get the list of all Codespaces and their states
           CODESPACES=$(gh codespace list --json name,state | jq -c '.[]')
-
-          # Iterate through each Codespace
           echo "$CODESPACES" | while IFS= read -r codespace; do
             NAME=$(echo "$codespace" | jq -r '.name')
             STATUS=$(echo "$codespace" | jq -r '.state')
@@ -39,7 +35,5 @@ jobs:
               echo "Codespace $NAME is already running."
             fi
           done
-
-          # Wait for all background processes to complete
           wait
           

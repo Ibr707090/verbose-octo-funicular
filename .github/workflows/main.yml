@@ -1,9 +1,10 @@
 name: Keep Codespaces Running
 
 on:
+  workflow_dispatch:  # Allows manual trigger
   schedule:
-    - cron: '* * * * *'  # Runs every minute
-  workflow_dispatch:  # Allows manual triggering
+    - cron: '* * * * *'
+    # Allows manual triggering
 
 jobs:
   maintain_codespaces:
